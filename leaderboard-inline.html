@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <title>Virtual Marine Leader Board</title>
+      <link href="https://fonts.googleapis.com/css?family=Press+Start+2P&display=swap" rel="stylesheet">
+      <style>
+        body {
+          font-family: 'Press Start 2P', cursive;
+          background: #000;
+          color:#FFF;
+        }
+
+        #container {
+          width: 100px;
+          height: auto;
+        }
+
+        .row {
+          position: relative;
+          display: block;
+          width: 100%;
+          height: 40px;
+          border-bottom: 1px solid #AFAFAF;
+        }
+
+        .rank {
+          position: relative;
+          display: inline-block;
+          width: 10%;
+          line-height: 50px;
+        }
+
+        .id {
+          position: relative;
+          display: inline-block;
+          width: 40%;
+        }
+
+        .score {
+          position: relative;
+          display: inline-block;
+          width: 20%;
+        }
+
+        .timestamp {
+          text-align: right;
+          position: relative;
+          display: inline-block;
+          width: 30%;
+        }
+      </style>
+    </head>
+    <body onload="update()">
+      <center><h1>HIGH SCORES</h1></center>
+      <div id="leaderboard" class="container">
+        <!-- scores will be inserted by the script here -->
+      </div>
+    </body>
+    <script>
+      var sheetURL = "https://script.google.com/macros/s/AKfycbwg1pjdT3i3TROBDPB2MopFGZmy6ieTcXH-A5HESjMY2T9x7BY/exec";
+      var xhttp;
+      if (window.XMLHttpRequest) {
+        xhttp = new XMLHttpRequest();
+      } else {
+        xhttp = new ActiveXObject("Microsoft.XMLHTTP");
+      }
+      xhttp.onreadystatechange = function () {
+        if (xhttp.readyState == 4 && xhttp.status == 200) {
+          var topTenJson = JSON.parse(xhttp.responseText);
+          updateLeaderboardView( topTenJson.users );
+        }
+      }
+
+      setInterval(function() {
+        update();
+      }, 10000);
+
+      function fmtMSS(s){return (s-(s%=60))/60+(9<s?':':':0')+Number.parseFloat(s).toFixed(2);}
+
+      function updateLeaderboardView(scores) {
+          let leaderboard = document.getElementById("leaderboard");
+          leaderboard.innerHTML = "";
+          let elements = [];
+
+          // init title bar
+          let scoreRowHeader = document.createElement("div");
+          scoreRowHeader.classList.add("row");
+
+          let rank = document.createElement("div")
+          rank.classList.add("rank");
+          rank.innerText = "Rank";
+          scoreRowHeader.appendChild(rank);
+
+          let id = document.createElement("div")
+          id.classList.add("id");
+          id.innerText = "Name";
+          scoreRowHeader.appendChild(id);
+
+          let score = document.createElement("div")
+          score.classList.add("score");
+          score.innerText = "Time";
+          scoreRowHeader.appendChild(score);
+
+          let timestamp = document.createElement("div")
+          timestamp.classList.add("timestamp");
+          timestamp.innerText = "Record Date";
+          scoreRowHeader.appendChild(timestamp);
+
+          leaderboard.appendChild(scoreRowHeader);
+
+          // add medals imoji
+          let emoji = ["\u{1F947} ", "\u{1F948} ", "\u{1F949} "];
+          for(let i=0; i<scores.length && i<emoji.length; i++) {
+            scores[i].id = emoji[i] + scores[i].id;
+          }
+
+          let ranks = ["1st", "2nd", "3rd", "4th", "5th", "6th","7th", "8th", "9th", "10th"];
+
+          // create elements for each player
+          for(let i=0; i<scores.length; i++) {
+
+            let rank = document.createElement("div");
+            let id = document.createElement("div");
+            let score = document.createElement("div");
+            let timestamp = document.createElement("div");
+
+            rank.classList.add("rank");
+            id.classList.add("id");
+            score.classList.add("score");
+            timestamp.classList.add("timestamp");
+
+            rank.innerText = ranks[i];
+            id.innerText = scores[i].id;
+
+            score.innerText = scores[i].score + " [s]";//fmtMSS(scores[i].score);
+
+            var recordDate = new Date(scores[i].date);
+            var recordDateString = recordDate.getDate() + "/" + (recordDate.getMonth() + 1) + "/" + recordDate.getFullYear();
+            timestamp.innerText = recordDateString;
+
+            let scoreRow = document.createElement("div");
+            scoreRow.classList.add("row");
+            scoreRow.appendChild(rank);
+            scoreRow.appendChild(id);
+            scoreRow.appendChild(score);
+            scoreRow.appendChild(timestamp);
+            leaderboard.appendChild(scoreRow);
+
+            elements.push(scoreRow);
+          }
+
+          let colors = ["gold", "silver", "#cd7f32"];
+          for(let i=0; i < colors.length; i++) {
+            if(elements[i]) {
+              elements[i].style.color = colors[i];
+              elements[i].style.fontWeight = "bold";
+            }
+          }
+      }
+
+      function update() {
+        xhttp.open("GET", sheetURL + "?top10=1", true);
+        xhttp.send();
+      }
+    </script>
+</html>
